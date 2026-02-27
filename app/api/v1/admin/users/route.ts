@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabase } from '@/lib/supabase/server';
+import { verifyAdmin } from '@/lib/auth/admin-guard';
 
 export async function GET(req: NextRequest) {
+  const auth = await verifyAdmin(req);
+  if (!auth.ok) return auth.error;
+
   const { searchParams } = req.nextUrl;
   const role  = searchParams.get('role');
   const page  = Math.max(1, parseInt(searchParams.get('page') ?? '1', 10));
@@ -20,6 +24,9 @@ export async function GET(req: NextRequest) {
 }
 
 export async function PATCH(req: NextRequest) {
+  const auth = await verifyAdmin(req);
+  if (!auth.ok) return auth.error;
+
   const { id, role } = await req.json();
   const VALID_ROLES = ['user', 'agent', 'advertiser', 'admin'];
   if (!id || !VALID_ROLES.includes(role)) {

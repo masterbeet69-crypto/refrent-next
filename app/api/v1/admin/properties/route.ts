@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabase } from '@/lib/supabase/server';
+import { verifyAdmin } from '@/lib/auth/admin-guard';
 
 export async function GET(req: NextRequest) {
+  const auth = await verifyAdmin(req);
+  if (!auth.ok) return auth.error;
+
   const { searchParams } = req.nextUrl;
   const status  = searchParams.get('status');
   const country = searchParams.get('country');
@@ -22,6 +26,9 @@ export async function GET(req: NextRequest) {
 }
 
 export async function PATCH(req: NextRequest) {
+  const auth = await verifyAdmin(req);
+  if (!auth.ok) return auth.error;
+
   const { id, status } = await req.json();
   const VALID_STATUSES = ['available', 'reserved', 'occupied', 'unavailable'];
   if (!id || !VALID_STATUSES.includes(status)) {

@@ -1,8 +1,12 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabase } from '@/lib/supabase/server';
+import { verifyAdmin } from '@/lib/auth/admin-guard';
 
-export async function GET() {
-  const sb = createServerSupabase(); // SERVICE_ROLE — bypasses RLS
+export async function GET(req: NextRequest) {
+  const auth = await verifyAdmin(req);
+  if (!auth.ok) return auth.error;
+
+  const sb = createServerSupabase();
 
   const [users, properties, logs, agents, available, searches7d] = await Promise.all([
     sb.from('profiles').select('*', { count: 'exact', head: true }),
@@ -16,11 +20,11 @@ export async function GET() {
   ]);
 
   return NextResponse.json({
-    total_users:       users.count      ?? 0,
-    total_properties:  properties.count ?? 0,
-    total_searches:    logs.count       ?? 0,
-    total_agents:      agents.count     ?? 0,
-    available_props:   available.count  ?? 0,
-    searches_7d:       searches7d.count ?? 0,
+    total_users:      users.count      ?? 0,
+    total_properties: properties.count ?? 0,
+    total_searches:   logs.count       ?? 0,
+    total_agents:     agents.count     ?? 0,
+    available_props:  available.count  ?? 0,
+    searches_7d:      searches7d.count ?? 0,
   });
 }

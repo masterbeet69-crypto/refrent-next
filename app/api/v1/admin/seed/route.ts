@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabase } from '@/lib/supabase/server';
+import { verifyAdmin } from '@/lib/auth/admin-guard';
 
 export async function POST(req: NextRequest) {
+  const auth = await verifyAdmin(req);
+  if (!auth.ok) return auth.error;
+
   let body: { password?: string; users?: number; agents?: number };
   try {
     body = await req.json();

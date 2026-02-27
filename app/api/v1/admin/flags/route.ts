@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabase } from '@/lib/supabase/server';
+import { verifyAdmin } from '@/lib/auth/admin-guard';
 
-export async function GET() {
+export async function GET(req: NextRequest) {
+  const auth = await verifyAdmin(req);
+  if (!auth.ok) return auth.error;
+
   const sb = createServerSupabase();
   const { data, error } = await sb
     .from('feature_flags')
@@ -12,6 +16,9 @@ export async function GET() {
 }
 
 export async function PATCH(req: NextRequest) {
+  const auth = await verifyAdmin(req);
+  if (!auth.ok) return auth.error;
+
   const { key, enabled } = await req.json();
   if (!key || typeof enabled !== 'boolean') {
     return NextResponse.json({ error: 'Requête invalide.' }, { status: 400 });
