@@ -1,6 +1,7 @@
 'use client';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useAuthModal } from '@/components/auth/AuthModalContext';
 import { Nav } from '@/components/layout/Nav';
 import { Footer } from '@/components/layout/Footer';
 import { StatusPill } from '@/components/ui/Pill';
@@ -15,6 +16,7 @@ const demoRefs = [
 export default function LandingPage() {
   const router = useRouter();
   const [refCode, setRefCode] = useState('');
+  const { openAuthModal } = useAuthModal();
 
   const handleSearch = (ref?: string) => {
     const q = ref || refCode;
@@ -245,15 +247,15 @@ export default function LandingPage() {
               Rejoignez des milliers d&apos;agents qui utilisent Refrent pour gérer leurs biens
               et gagner en crédibilité auprès de leurs clients.
             </p>
-            <a
-              href="/register"
-              className="inline-block px-8 py-4 text-white rounded-lg font-medium transition-colors"
+            <button
+              onClick={() => openAuthModal('register')}
+              className="px-8 py-4 text-white rounded-lg font-medium transition-colors"
               style={{ backgroundColor: '#2A5C45' }}
               onMouseOver={e => (e.currentTarget.style.backgroundColor = '#1E4231')}
               onMouseOut={e => (e.currentTarget.style.backgroundColor = '#2A5C45')}
             >
               Créer un compte agent
-            </a>
+            </button>
           </div>
         </div>
       </section>
