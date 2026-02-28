@@ -1,9 +1,21 @@
 'use client';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import type { LucideIcon } from 'lucide-react';
+import {
+  LayoutDashboard, Users, Building2, Flag, BarChart2,
+  Settings, Zap, Database, Megaphone, ShieldAlert,
+  History, Bell, Heart, User, Star, PlusCircle,
+  type LucideIcon,
+} from 'lucide-react';
 
-export interface NavItem { href: string; label: string; icon: LucideIcon }
+// Lookup par nom de chaîne — sérialisable depuis les Server Components
+const ICON_MAP: Record<string, LucideIcon> = {
+  LayoutDashboard, Users, Building2, Flag, BarChart2,
+  Settings, Zap, Database, Megaphone, ShieldAlert,
+  History, Bell, Heart, User, Star, PlusCircle,
+};
+
+export interface NavItem { href: string; label: string; iconName: string }
 
 interface Props { items: NavItem[]; role?: string }
 
@@ -52,7 +64,8 @@ export function DashSidebar({ items, role }: Props) {
 
       {/* Nav */}
       <nav className="flex-1 px-3 py-4 space-y-0.5">
-        {items.map(({ href, label, icon: Icon }) => {
+        {items.map(({ href, label, iconName }) => {
+          const Icon = ICON_MAP[iconName] ?? LayoutDashboard;
           const isActive = pathname === href || pathname.startsWith(href + '/');
           return (
             <Link
