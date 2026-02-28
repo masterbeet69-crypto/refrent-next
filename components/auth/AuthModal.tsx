@@ -99,7 +99,12 @@ function LoginForm({ onClose }: { onClose: () => void }) {
       return;
     }
     onClose();
-    router.refresh();
+    window.dispatchEvent(new Event('auth:change'));
+    // Rediriger vers le dashboard selon le rôle
+    const role = document.cookie.split(';').find(c => c.trim().startsWith('rf_role='))?.split('=')[1];
+    if (role === 'admin') router.push('/admin/dashboard');
+    else if (role === 'agent') router.push('/agent/dashboard');
+    else router.push('/user/dashboard');
   }
 
   return (
@@ -186,7 +191,11 @@ function RegisterForm({ onClose }: { onClose: () => void }) {
     setLoading(false);
     if (loginRes.ok) {
       onClose();
-      router.refresh();
+      window.dispatchEvent(new Event('auth:change'));
+      const role = document.cookie.split(';').find(c => c.trim().startsWith('rf_role='))?.split('=')[1];
+      if (role === 'admin') router.push('/admin/dashboard');
+      else if (role === 'agent') router.push('/agent/dashboard');
+      else router.push('/user/dashboard');
     } else {
       setErr('Compte créé ! Veuillez vous connecter.');
     }
