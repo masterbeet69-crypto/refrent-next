@@ -1,5 +1,5 @@
 'use client';
-import { createContext, useContext, useState, ReactNode } from 'react';
+import { createContext, useContext, useState, useCallback, useMemo, ReactNode } from 'react';
 
 type ModalMode = 'login' | 'register';
 
@@ -16,29 +16,43 @@ export function AuthModalProvider({ children }: { children: ReactNode }) {
   const [open, setOpen] = useState(false);
   const [mode, setMode] = useState<ModalMode>('login');
 
-  function openAuthModal(m: ModalMode = 'login') {
+  const openAuthModal = useCallback((m: ModalMode = 'login') => {
     setMode(m);
     setOpen(true);
-  }
+  }, []);
 
-  function closeAuthModal() {
+  const closeAuthModal = useCallback(() => {
     setOpen(false);
-  }
+    setMode('login'); // reset to default
+  }, []);
+
+  const value = useMemo(
+    () => ({ open, mode, openAuthModal, closeAuthModal }),
+    [open, mode, openAuthModal, closeAuthModal]
+  );
 
   return (
-    <AuthModalContext.Provider value={{ open, mode, openAuthModal, closeAuthModal }}>
+    <AuthModalContext.Provider value={value}>
       {children}
     </AuthModalContext.Provider>
   );
 }
 
-// Safe fallback when used outside provider (e.g., app/not-found.tsx)
 export function useAuthModal() {
   const ctx = useContext(AuthModalContext);
-  return ctx ?? {
-    open: false,
-    mode: 'login' as ModalMode,
-    openAuthModal: () => {},
-    closeAuthModal: () => {},
-  };
+
+  if (ctx === null) {
+    if (process.env.NODE_ENV === 'development') {
+      // In dev, warn but don't throw (not-found.tsx uses Nav which uses this hook)
+      console.warn('useAuthModal: no AuthModalProvider found, returning no-op fallback');
+    }
+    return {
+      open: false,
+      mode: 'login' as ModalMode,
+      openAuthModal: () => {},
+      closeAuthModal: () => {},
+    };
+  }
+
+  return ctx;
 }
