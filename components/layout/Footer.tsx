@@ -31,7 +31,7 @@ export function Footer() {
 
         <div className="flex items-center justify-center gap-6 text-sm">
           <Link
-            href="/comment-ca-marche"
+            href="/#comment-ca-marche"
             className="transition-colors hover:text-[#1A1714]"
             style={{ color: '#5A5550' }}
           >

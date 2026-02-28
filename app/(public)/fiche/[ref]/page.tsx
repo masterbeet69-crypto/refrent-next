@@ -1,4 +1,3 @@
-import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { createServerSupabase } from '@/lib/supabase/server';
 import { isValidRefCode } from '@/lib/utils/ref';
@@ -9,15 +8,64 @@ import { cityName, countryName } from '@/lib/utils/country';
 import { formatPrice, formatDate } from '@/lib/utils/format';
 import {
   MapPin, ArrowLeft, Home, BedDouble, Maximize2,
-  Layers, Phone, MessageCircle, Heart, Flag, Shield, Star,
+  Layers, Phone, MessageCircle, Heart, Flag, Shield, Star, SearchX,
 } from 'lucide-react';
 
 interface Props { params: Promise<{ ref: string }> }
 
+function PropertyNotFound({ ref }: { ref: string }) {
+  return (
+    <div style={{ backgroundColor: '#F7F5F2', minHeight: '100vh' }}>
+      <Nav />
+      <div className="max-w-2xl mx-auto px-6 py-24 text-center space-y-6">
+        <div
+          className="inline-flex items-center justify-center w-16 h-16 rounded-full"
+          style={{ backgroundColor: '#EFECE5' }}
+        >
+          <SearchX className="w-7 h-7" style={{ color: '#8A837C' }} />
+        </div>
+        <h1
+          className="text-3xl"
+          style={{ fontFamily: 'var(--font-fraunces)', color: '#1A1714' }}
+        >
+          Bien introuvable
+        </h1>
+        <p style={{ color: '#5A5550' }}>
+          Aucun bien ne correspond au code{' '}
+          <code
+            className="px-2 py-0.5 rounded text-sm"
+            style={{ fontFamily: 'var(--font-mono)', backgroundColor: '#EFECE5', color: '#5A5550' }}
+          >
+            {ref}
+          </code>
+          . Vérifiez le code et réessayez.
+        </p>
+        <div className="flex items-center justify-center gap-3">
+          <Link
+            href="/"
+            className="px-6 py-3 text-sm font-medium text-white rounded-xl transition-opacity hover:opacity-90"
+            style={{ backgroundColor: '#2A5C45' }}
+          >
+            Nouvelle recherche
+          </Link>
+          <Link
+            href="/browse"
+            className="px-6 py-3 text-sm font-medium rounded-xl transition-colors"
+            style={{ border: '1px solid #E8E4DF', color: '#5A5550', backgroundColor: '#FFFFFF' }}
+          >
+            Explorer les biens
+          </Link>
+        </div>
+      </div>
+      <Footer />
+    </div>
+  );
+}
+
 export default async function FichePage({ params }: Props) {
   const { ref: rawRef } = await params;
   const ref = rawRef.toUpperCase();
-  if (!isValidRefCode(ref)) notFound();
+  if (!isValidRefCode(ref)) return <PropertyNotFound ref={ref} />;
 
   const sb = createServerSupabase();
   const { data: property } = await sb
@@ -26,7 +74,7 @@ export default async function FichePage({ params }: Props) {
     .eq('ref_code', ref)
     .single();
 
-  if (!property) notFound();
+  if (!property) return <PropertyNotFound ref={ref} />;
 
   const p = property;
   const agentProfile = (p.profiles as { full_name?: string; avatar_url?: string } | null);

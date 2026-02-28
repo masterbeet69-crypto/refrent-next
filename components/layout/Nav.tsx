@@ -52,7 +52,7 @@ export function Nav() {
             Accueil
           </Link>
           <Link
-            href="/comment-ca-marche"
+            href="/#comment-ca-marche"
             className="text-sm font-medium transition-colors hover:text-[#1A1714]"
             style={{ color: '#5A5550' }}
           >

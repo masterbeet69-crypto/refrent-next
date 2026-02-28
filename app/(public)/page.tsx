@@ -132,7 +132,7 @@ export default function LandingPage() {
       </section>
 
       {/* ── HOW IT WORKS ── */}
-      <section className="py-20 px-6" style={{ backgroundColor: '#EFECE5' }}>
+      <section id="comment-ca-marche" className="py-20 px-6" style={{ backgroundColor: '#EFECE5' }}>
         <div className="max-w-6xl mx-auto">
           <h2
             className="text-center mb-16"
