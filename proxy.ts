@@ -8,7 +8,7 @@ const ROUTES = [
   { prefix: '/admin',      role: 'admin'      },
 ];
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const route = ROUTES.find(r => pathname.startsWith(r.prefix));
   if (!route) return NextResponse.next();
