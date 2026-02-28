@@ -26,7 +26,7 @@ export async function POST(req: NextRequest) {
   const { data, error } = await sb.auth.admin.createUser({
     email,
     password,
-    email_confirm: false,
+    email_confirm: true,
     user_metadata: { full_name, role, country_code, city_code },
   });
 
