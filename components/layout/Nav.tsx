@@ -1,9 +1,11 @@
 'use client';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
+import { useAuthModal } from '@/components/auth/AuthModalContext';
 
 export function Nav() {
   const [scrolled, setScrolled] = useState(false);
+  const { openAuthModal } = useAuthModal();
 
   useEffect(() => {
     const handler = () => setScrolled(window.scrollY > 20);
@@ -62,22 +64,22 @@ export function Nav() {
 
         {/* Actions */}
         <div className="flex items-center gap-3">
-          <Link
-            href="/login"
+          <button
+            onClick={() => openAuthModal('login')}
             className="px-4 py-2 text-sm font-medium rounded-lg transition-colors hover:bg-[#F7F5F2]"
             style={{ color: '#5A5550' }}
           >
             Connexion
-          </Link>
-          <Link
-            href="/register"
+          </button>
+          <button
+            onClick={() => openAuthModal('register')}
             className="px-4 py-2 text-sm font-medium text-white rounded-lg transition-colors"
             style={{ backgroundColor: '#2A5C45' }}
             onMouseOver={e => (e.currentTarget.style.backgroundColor = '#1E4231')}
             onMouseOut={e => (e.currentTarget.style.backgroundColor = '#2A5C45')}
           >
             S&apos;inscrire
-          </Link>
+          </button>
         </div>
       </div>
     </nav>
