@@ -8,11 +8,16 @@ const statusConfig: Record<string, { bg: string; text: string; dot: string; labe
   reserve:       { bg: '#FEF3CD', text: '#8A5A00', dot: '#8A5A00', label: 'Réservé' },
   occupe:        { bg: '#FDEDED', text: '#9B1C1C', dot: '#9B1C1C', label: 'Occupé' },
   indisponible:  { bg: '#F0EFEE', text: '#6B6560', dot: '#6B6560', label: 'Indisponible' },
+  visiting:      { bg: '#EEF2FF', text: '#3730A3', dot: '#3730A3', label: 'En visite' },
+  reserved:      { bg: '#FEF3CD', text: '#8A5A00', dot: '#8A5A00', label: 'Réservé' },
+  occupied:      { bg: '#FDEDED', text: '#9B1C1C', dot: '#9B1C1C', label: 'Occupé' },
+  available:     { bg: '#EAF2EC', text: '#2A5C45', dot: '#2A5C45', label: 'Disponible' },
   // French label keys
   'Disponible':   { bg: '#EAF2EC', text: '#2A5C45', dot: '#2A5C45', label: 'Disponible' },
   'Réservé':      { bg: '#FEF3CD', text: '#8A5A00', dot: '#8A5A00', label: 'Réservé' },
   'Occupé':       { bg: '#FDEDED', text: '#9B1C1C', dot: '#9B1C1C', label: 'Occupé' },
   'Indisponible': { bg: '#F0EFEE', text: '#6B6560', dot: '#6B6560', label: 'Indisponible' },
+  'En visite':    { bg: '#EEF2FF', text: '#3730A3', dot: '#3730A3', label: 'En visite' },
 };
 
 interface StatusPillProps {

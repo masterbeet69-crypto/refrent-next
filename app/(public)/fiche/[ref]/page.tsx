@@ -4,7 +4,6 @@ import { isValidRefCode } from '@/lib/utils/ref';
 import { Nav } from '@/components/layout/Nav';
 import { Footer } from '@/components/layout/Footer';
 import { StatusPill } from '@/components/ui/Pill';
-import { cityName, countryName } from '@/lib/utils/country';
 import { formatPrice, formatDate } from '@/lib/utils/format';
 import {
   MapPin, ArrowLeft, Home, BedDouble, Maximize2,
@@ -70,15 +69,15 @@ export default async function FichePage({ params }: Props) {
   const sb = createServerSupabase();
   const { data: property } = await sb
     .from('properties')
-    .select('*, profiles(full_name, avatar_url)')
+    .select('*, agents(name, avatar_url)')
     .eq('ref_code', ref)
     .single();
 
   if (!property) return <PropertyNotFound ref={ref} />;
 
   const p = property;
-  const agentProfile = (p.profiles as { full_name?: string; avatar_url?: string } | null);
-  const agentName = agentProfile?.full_name ?? 'Agent Refrent';
+  const agentProfile = (p.agents as { name?: string; avatar_url?: string } | null);
+  const agentName = agentProfile?.name ?? 'Agent Refrent';
   const agentInitials = agentName
     .split(' ')
     .map((n: string) => n[0] ?? '')
@@ -86,11 +85,11 @@ export default async function FichePage({ params }: Props) {
     .slice(0, 2)
     .toUpperCase();
 
-  const city = cityName(p.country_code, p.city_code);
-  const country = countryName(p.country_code);
-  const propertyType = p.property_type
-    ? p.property_type.charAt(0).toUpperCase() + p.property_type.slice(1)
+  const cityDisplay = (p.city as string | null) ?? '';
+  const propertyType = (p.type as string | null)
+    ? ((p.type as string).charAt(0).toUpperCase() + (p.type as string).slice(1))
     : 'Bien immobilier';
+  const contactPhone = (p.contact_phone as string | null) ?? null;
 
   return (
     <div style={{ backgroundColor: '#F7F5F2', minHeight: '100vh' }}>
@@ -118,12 +117,12 @@ export default async function FichePage({ params }: Props) {
                 >
                   {p.ref_code}
                 </span>
-                {p.property_type && (
+                {p.type && (
                   <span
                     className="px-3 py-1 rounded-full text-xs font-medium capitalize"
                     style={{ backgroundColor: '#FFFFFF', color: '#5A5550' }}
                   >
-                    {p.property_type}
+                    {p.type as string}
                   </span>
                 )}
               </div>
@@ -133,14 +132,14 @@ export default async function FichePage({ params }: Props) {
                 className="text-3xl md:text-4xl"
                 style={{ fontFamily: 'var(--font-fraunces)', color: '#1A1714', lineHeight: 1.1 }}
               >
-                {propertyType} à {city}
+                {propertyType}{cityDisplay ? ` à ${cityDisplay}` : ''}
               </h1>
 
               {/* Location */}
               <div className="flex items-center gap-1.5 text-sm" style={{ color: '#5A5550' }}>
                 <MapPin className="w-4 h-4 flex-shrink-0" />
                 <span>
-                  {p.district ? `${p.district}, ` : ''}{city}, {country}
+                  {(p.neighborhood as string | null) ? `${p.neighborhood}, ` : ''}{cityDisplay}
                 </span>
               </div>
             </div>
@@ -186,14 +185,14 @@ export default async function FichePage({ params }: Props) {
                 {p.rooms != null && (
                   <DetailRow icon={BedDouble} label="Pièces" value={`${p.rooms} pièce${p.rooms > 1 ? 's' : ''}`} />
                 )}
-                {p.area_sqm != null && (
-                  <DetailRow icon={Maximize2} label="Surface" value={`${p.area_sqm} m²`} />
+                {(p.surface as number | null) != null && (
+                  <DetailRow icon={Maximize2} label="Surface" value={`${p.surface} m²`} />
                 )}
-                {p.floor != null && (
-                  <DetailRow icon={Layers} label="Étage" value={p.floor === 0 ? 'RDC' : `${p.floor}e étage`} />
+                {(p.floor as number | null) != null && (
+                  <DetailRow icon={Layers} label="Étage" value={(p.floor as number) === 0 ? 'RDC' : `${p.floor}e étage`} />
                 )}
-                {p.district && (
-                  <DetailRow icon={MapPin} label="Quartier" value={p.district} />
+                {(p.neighborhood as string | null) && (
+                  <DetailRow icon={MapPin} label="Quartier" value={p.neighborhood as string} />
                 )}
               </div>
             </div>
@@ -231,24 +230,32 @@ export default async function FichePage({ params }: Props) {
               </div>
 
               <div className="space-y-2.5">
-                <a
-                  href="tel:+22900000000"
-                  className="flex items-center justify-center gap-2 w-full py-3 rounded-xl text-white font-medium transition-opacity hover:opacity-90"
-                  style={{ backgroundColor: '#2A5C45' }}
-                >
-                  <Phone className="w-4 h-4" />
-                  Appeler l&apos;agent
-                </a>
-                <a
-                  href="https://wa.me/22900000000"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center justify-center gap-2 w-full py-3 rounded-xl text-white font-medium transition-opacity hover:opacity-90"
-                  style={{ backgroundColor: '#25D366' }}
-                >
-                  <MessageCircle className="w-4 h-4" />
-                  WhatsApp
-                </a>
+                {contactPhone ? (
+                  <>
+                    <a
+                      href={`tel:${contactPhone}`}
+                      className="flex items-center justify-center gap-2 w-full py-3 rounded-xl text-white font-medium transition-opacity hover:opacity-90"
+                      style={{ backgroundColor: '#2A5C45' }}
+                    >
+                      <Phone className="w-4 h-4" />
+                      Appeler l&apos;agent
+                    </a>
+                    <a
+                      href={`https://wa.me/${contactPhone.replace(/\D/g, '')}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center justify-center gap-2 w-full py-3 rounded-xl text-white font-medium transition-opacity hover:opacity-90"
+                      style={{ backgroundColor: '#25D366' }}
+                    >
+                      <MessageCircle className="w-4 h-4" />
+                      WhatsApp
+                    </a>
+                  </>
+                ) : (
+                  <p className="text-sm text-center py-2" style={{ color: '#8A837C' }}>
+                    Contactez Refrent pour les coordonnées de l&apos;agent.
+                  </p>
+                )}
               </div>
 
               <div

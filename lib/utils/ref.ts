@@ -1,4 +1,4 @@
-const REF_REGEX = /^REF-[A-Z]{2}-[A-Z]{3}-\d{5}$/;
+const REF_REGEX = /^REF-[A-Z0-9-]{1,30}$/;
 
 export function isValidRefCode(code: string): boolean {
   return REF_REGEX.test(code);

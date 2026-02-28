@@ -8,9 +8,9 @@ import { StatusPill } from '@/components/ui/Pill';
 import { Search, Upload, CheckCircle2, Shield } from 'lucide-react';
 
 const demoRefs = [
-  'REF-BJ-CTN-00001',
-  'REF-SN-DKR-00234',
-  'REF-CI-ABJ-01567',
+  'REF-5530',
+  'REF-7714',
+  'REF-1092',
 ];
 
 export default function LandingPage() {
@@ -92,7 +92,7 @@ export default function LandingPage() {
 
             <div className="flex items-center justify-between text-sm">
               <span style={{ color: '#8A837C', fontFamily: 'var(--font-mono)' }}>
-                Format : REF-{'{PAYS}'}-{'{VILLE}'}-{'{NNNNN}'}
+                Exemple : REF-5530
               </span>
               <div
                 className="flex items-center gap-1.5 px-3 py-1 rounded-full font-medium"
