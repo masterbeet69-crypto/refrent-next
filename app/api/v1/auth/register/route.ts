@@ -32,5 +32,15 @@ export async function POST(req: NextRequest) {
 
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });
 
+  // Créer le profil (le trigger le fait aussi, upsert pour éviter les doublons)
+  await sb.from('profiles').upsert({
+    id: data.user.id,
+    role: role as AllowedRole,
+    full_name: full_name!,
+    country_code: country_code ?? null,
+    city_code: city_code ?? null,
+    is_active: true,
+  }, { onConflict: 'id' });
+
   return NextResponse.json({ ok: true, user_id: data.user.id }, { status: 201 });
 }
