@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Fraunces, Inter, JetBrains_Mono } from 'next/font/google';
 import "./globals.css";
+import { AuthModalProvider } from '@/components/auth/AuthModalContext';
+import { AuthModal } from '@/components/auth/AuthModal';
 
 const fraunces = Fraunces({
   subsets: ['latin'],
@@ -34,7 +36,10 @@ export default function RootLayout({
   return (
     <html lang="fr" className={`${fraunces.variable} ${inter.variable} ${jetbrainsMono.variable}`}>
       <body style={{ fontFamily: 'var(--font-inter)' }}>
-        {children}
+        <AuthModalProvider>
+          {children}
+          <AuthModal />
+        </AuthModalProvider>
       </body>
     </html>
   );
