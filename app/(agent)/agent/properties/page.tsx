@@ -41,7 +41,7 @@ export default async function AgentPropertiesPage() {
         <table className="w-full text-sm">
           <thead style={{ backgroundColor: '#EFECE5' }}>
             <tr>
-              {['Code REF', 'District', 'Prix', 'Statut', 'Ajouté le'].map(h => (
+              {['Code REF', 'Quartier', 'Prix', 'Statut', 'Ajouté le', ''].map(h => (
                 <th
                   key={h}
                   className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider"
@@ -58,7 +58,9 @@ export default async function AgentPropertiesPage() {
                 <td className="px-6 py-3 text-xs" style={{ color: '#1A1714', fontFamily: 'var(--font-mono)' }}>
                   {p.ref_code}
                 </td>
-                <td className="px-6 py-3 text-sm" style={{ color: '#5A5550' }}>{p.district ?? '—'}</td>
+                <td className="px-6 py-3 text-sm" style={{ color: '#5A5550' }}>
+                  {(p.neighborhood ?? p.district) ?? '—'}
+                </td>
                 <td className="px-6 py-3 text-sm" style={{ color: '#1A1714' }}>
                   {p.price ? formatPrice(p.price, p.currency ?? 'FCFA') : '—'}
                 </td>
@@ -67,6 +69,15 @@ export default async function AgentPropertiesPage() {
                 </td>
                 <td className="px-6 py-3 text-xs" style={{ color: '#8A837C' }}>
                   {formatDate(p.created_at)}
+                </td>
+                <td className="px-6 py-3">
+                  <Link
+                    href={`/fiche/${p.ref_code}`}
+                    className="px-3 py-1.5 rounded-lg text-xs font-medium transition-colors"
+                    style={{ backgroundColor: '#EAF2EC', color: '#2A5C45' }}
+                  >
+                    Voir →
+                  </Link>
                 </td>
               </tr>
             ))}

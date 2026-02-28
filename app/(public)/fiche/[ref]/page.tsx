@@ -1,14 +1,34 @@
 import Link from 'next/link';
+import { cookies } from 'next/headers';
 import { createServerSupabase } from '@/lib/supabase/server';
 import { isValidRefCode } from '@/lib/utils/ref';
 import { Nav } from '@/components/layout/Nav';
 import { Footer } from '@/components/layout/Footer';
 import { StatusPill } from '@/components/ui/Pill';
+import { ContactButtons } from '@/components/fiche/ContactButtons';
+import { NotifyButton } from '@/components/fiche/NotifyButton';
 import { formatPrice, formatDate } from '@/lib/utils/format';
 import {
   MapPin, ArrowLeft, Home, BedDouble, Maximize2,
-  Layers, Phone, MessageCircle, Heart, Flag, Shield, Star, SearchX,
+  Layers, Heart, Flag, Shield, Star, SearchX,
 } from 'lucide-react';
+
+const STATUS_HERO_BG: Record<string, string> = {
+  available:    '#EAF2EC',
+  disponible:   '#EAF2EC',
+  Disponible:   '#EAF2EC',
+  reserved:     '#FFFBEB',
+  reserve:      '#FFFBEB',
+  'Réservé':    '#FFFBEB',
+  occupied:     '#FEF2F2',
+  occupe:       '#FEF2F2',
+  'Occupé':     '#FEF2F2',
+  visiting:     '#EEF2FF',
+  'En visite':  '#EEF2FF',
+  unavailable:  '#F5F4F2',
+  indisponible: '#F5F4F2',
+  'Indisponible':'#F5F4F2',
+};
 
 interface Props { params: Promise<{ ref: string }> }
 
@@ -66,18 +86,22 @@ export default async function FichePage({ params }: Props) {
   const ref = rawRef.toUpperCase();
   if (!isValidRefCode(ref)) return <PropertyNotFound ref={ref} />;
 
+  const cookieStore = await cookies();
+  const isLoggedIn = !!cookieStore.get('rf_role')?.value;
+
   const sb = createServerSupabase();
   const { data: property } = await sb
     .from('properties')
-    .select('*, agents(name, avatar_url)')
+    .select('*, agents(name, avatar_url, is_premium)')
     .eq('ref_code', ref)
     .single();
 
   if (!property) return <PropertyNotFound ref={ref} />;
 
   const p = property;
-  const agentProfile = (p.agents as { name?: string; avatar_url?: string } | null);
+  const agentProfile = (p.agents as { name?: string; avatar_url?: string; is_premium?: boolean } | null);
   const agentName = agentProfile?.name ?? 'Agent Refrent';
+  const agentIsPremium = agentProfile?.is_premium === true;
   const agentInitials = agentName
     .split(' ')
     .map((n: string) => n[0] ?? '')
@@ -90,13 +114,14 @@ export default async function FichePage({ params }: Props) {
     ? ((p.type as string).charAt(0).toUpperCase() + (p.type as string).slice(1))
     : 'Bien immobilier';
   const contactPhone = (p.contact_phone as string | null) ?? null;
+  const heroBg = STATUS_HERO_BG[p.status as string] ?? '#EAF2EC';
 
   return (
     <div style={{ backgroundColor: '#F7F5F2', minHeight: '100vh' }}>
       <Nav />
 
       {/* ── HERO BAND ── */}
-      <div style={{ backgroundColor: '#EAF2EC' }} className="py-12 px-6">
+      <div style={{ backgroundColor: heroBg }} className="py-12 px-6">
         <div className="max-w-6xl mx-auto">
           <Link
             href="/"
@@ -229,34 +254,16 @@ export default async function FichePage({ params }: Props) {
                 <StatusPill status={p.status} size="sm" />
               </div>
 
-              <div className="space-y-2.5">
-                {contactPhone ? (
-                  <>
-                    <a
-                      href={`tel:${contactPhone}`}
-                      className="flex items-center justify-center gap-2 w-full py-3 rounded-xl text-white font-medium transition-opacity hover:opacity-90"
-                      style={{ backgroundColor: '#2A5C45' }}
-                    >
-                      <Phone className="w-4 h-4" />
-                      Appeler l&apos;agent
-                    </a>
-                    <a
-                      href={`https://wa.me/${contactPhone.replace(/\D/g, '')}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center justify-center gap-2 w-full py-3 rounded-xl text-white font-medium transition-opacity hover:opacity-90"
-                      style={{ backgroundColor: '#25D366' }}
-                    >
-                      <MessageCircle className="w-4 h-4" />
-                      WhatsApp
-                    </a>
-                  </>
-                ) : (
-                  <p className="text-sm text-center py-2" style={{ color: '#8A837C' }}>
-                    Contactez Refrent pour les coordonnées de l&apos;agent.
-                  </p>
-                )}
-              </div>
+              <ContactButtons
+                contactPhone={contactPhone}
+                agentIsPremium={agentIsPremium}
+              />
+
+              <NotifyButton
+                propertyRef={ref}
+                status={p.status as string}
+                isLoggedIn={isLoggedIn}
+              />
 
               <div
                 className="grid grid-cols-2 gap-2 pt-3"

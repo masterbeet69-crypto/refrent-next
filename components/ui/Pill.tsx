@@ -26,9 +26,23 @@ interface StatusPillProps {
   size?: 'sm' | 'md';
 }
 
+const STATUS_PULSE_DURATION: Record<string, number> = {
+  disponible:   1.5,
+  available:    1.5,
+  Disponible:   1.5,
+  reserve:      2.5,
+  reserved:     2.5,
+  'Réservé':    2.5,
+  occupied:     3,
+  occupe:       3,
+  'Occupé':     3,
+  visiting:     2,
+  'En visite':  2,
+};
+
 export function StatusPill({ status, showDot = true, size = 'md' }: StatusPillProps) {
   const cfg = statusConfig[status] ?? { bg: '#F0EFEE', text: '#6B6560', dot: '#6B6560', label: status };
-  const isAvailable = status === 'disponible' || status === 'Disponible';
+  const duration = STATUS_PULSE_DURATION[status] ?? 2.5;
 
   return (
     <div
@@ -41,19 +55,12 @@ export function StatusPill({ status, showDot = true, size = 'md' }: StatusPillPr
       }}
     >
       {showDot && (
-        isAvailable ? (
-          <motion.span
-            className="rounded-full inline-block"
-            style={{ width: 8, height: 8, backgroundColor: cfg.dot }}
-            animate={{ scale: [1, 1.3, 1] }}
-            transition={{ duration: 2, repeat: Infinity }}
-          />
-        ) : (
-          <span
-            className="rounded-full inline-block"
-            style={{ width: 8, height: 8, backgroundColor: cfg.dot }}
-          />
-        )
+        <motion.span
+          className="rounded-full inline-block"
+          style={{ width: 8, height: 8, backgroundColor: cfg.dot }}
+          animate={{ scale: [1, 1.35, 1], opacity: [1, 0.55, 1] }}
+          transition={{ duration, repeat: Infinity, ease: 'easeInOut' }}
+        />
       )}
       {cfg.label}
     </div>
