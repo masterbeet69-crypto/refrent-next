@@ -5,6 +5,7 @@ import { StatusPill } from '@/components/ui/Pill';
 import Link from 'next/link';
 import { formatPrice } from '@/lib/utils/format';
 import { CountrySelect } from './CountrySelect';
+import { AdBanner } from '@/components/ads/AdBanner';
 
 interface Props {
   searchParams: Promise<{ country?: string; city?: string; status?: string; type?: string }>;
@@ -77,6 +78,9 @@ export default async function BrowsePage({ searchParams }: Props) {
             </Link>
           )}
         </div>
+
+        {/* Ad banner */}
+        <AdBanner placement="browse_inline" className="mb-2" />
 
         {/* Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">

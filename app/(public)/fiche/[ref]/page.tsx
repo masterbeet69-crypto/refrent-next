@@ -7,6 +7,7 @@ import { Footer } from '@/components/layout/Footer';
 import { StatusPill } from '@/components/ui/Pill';
 import { ContactButtons } from '@/components/fiche/ContactButtons';
 import { NotifyButton } from '@/components/fiche/NotifyButton';
+import { AdBanner } from '@/components/ads/AdBanner';
 import { formatPrice, formatDate } from '@/lib/utils/format';
 import {
   MapPin, ArrowLeft, Home, BedDouble, Maximize2,
@@ -92,16 +93,17 @@ export default async function FichePage({ params }: Props) {
   const sb = createServerSupabase();
   const { data: property } = await sb
     .from('properties')
-    .select('*, agents(name, avatar_url, is_premium)')
+    .select('*, agents(name, avatar_url, phone)')
     .eq('ref_code', ref)
     .single();
 
   if (!property) return <PropertyNotFound ref={ref} />;
 
   const p = property;
-  const agentProfile = (p.agents as { name?: string; avatar_url?: string; is_premium?: boolean } | null);
+  const agentProfile = (p.agents as { name?: string; avatar_url?: string; phone?: string } | null);
   const agentName = agentProfile?.name ?? 'Agent Refrent';
-  const agentIsPremium = agentProfile?.is_premium === true;
+  // Premium = agent has a phone number (contact details unlocked)
+  const agentIsPremium = !!(agentProfile?.phone || (p.contact_phone as string | null));
   const agentInitials = agentName
     .split(' ')
     .map((n: string) => n[0] ?? '')
@@ -113,7 +115,7 @@ export default async function FichePage({ params }: Props) {
   const propertyType = (p.type as string | null)
     ? ((p.type as string).charAt(0).toUpperCase() + (p.type as string).slice(1))
     : 'Bien immobilier';
-  const contactPhone = (p.contact_phone as string | null) ?? null;
+  const contactPhone = (p.contact_phone as string | null) ?? agentProfile?.phone ?? null;
   const heroBg = STATUS_HERO_BG[p.status as string] ?? '#EAF2EC';
 
   return (
@@ -285,6 +287,9 @@ export default async function FichePage({ params }: Props) {
                 </button>
               </div>
             </div>
+
+            {/* Ad banner */}
+            <AdBanner placement="fiche_sidebar" />
 
             {/* Agent card */}
             <div
