@@ -26,49 +26,93 @@ export default async function UserDashboardPage() {
 
   return (
     <div>
-      <h1 className="font-display text-2xl text-ink mb-6">Tableau de bord</h1>
+      <h1
+        className="text-2xl mb-8"
+        style={{ fontFamily: 'var(--font-fraunces)', color: '#1A1714' }}
+      >
+        Tableau de bord
+      </h1>
 
-      <div className="bg-surf rounded-r3 shadow-sh1 p-6 mb-6">
-        <h2 className="font-semibold text-ink mb-3">Vérifier un code REF</h2>
+      {/* Search card */}
+      <div
+        className="rounded-2xl p-6 mb-6"
+        style={{ backgroundColor: '#FFFFFF', boxShadow: '0 2px 8px rgba(0,0,0,.06)' }}
+      >
+        <h2
+          className="text-base font-semibold mb-4"
+          style={{ fontFamily: 'var(--font-fraunces)', color: '#1A1714' }}
+        >
+          Vérifier un code REF
+        </h2>
         <RefInput />
       </div>
 
-      <div className="bg-surf rounded-r3 shadow-sh1 overflow-hidden">
-        <div className="px-5 py-3 border-b border-brd flex items-center justify-between">
-          <h2 className="font-semibold text-ink text-sm">Recherches récentes</h2>
-          <Link href="/user/history" className="text-xs text-acc hover:underline">
-            Voir tout
+      {/* Recent searches */}
+      <div
+        className="rounded-2xl overflow-hidden"
+        style={{ backgroundColor: '#FFFFFF', boxShadow: '0 2px 8px rgba(0,0,0,.06)' }}
+      >
+        <div
+          className="px-6 py-4 flex items-center justify-between"
+          style={{ borderBottom: '1px solid #E8E4DF' }}
+        >
+          <h2 className="text-sm font-semibold" style={{ color: '#1A1714' }}>
+            Recherches récentes
+          </h2>
+          <Link
+            href="/user/history"
+            className="text-xs font-medium"
+            style={{ color: '#2A5C45' }}
+          >
+            Voir tout →
           </Link>
         </div>
         {recentSearches.length > 0 ? (
           <table className="w-full text-sm">
-            <thead className="bg-bg2 text-ink3 text-xs uppercase">
+            <thead style={{ backgroundColor: '#EFECE5' }}>
               <tr>
                 {['Code REF', 'Trouvé', 'Date'].map(h => (
-                  <th key={h} className="px-4 py-3 text-left font-medium">{h}</th>
+                  <th
+                    key={h}
+                    className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider"
+                    style={{ color: '#8A837C' }}
+                  >
+                    {h}
+                  </th>
                 ))}
               </tr>
             </thead>
-            <tbody className="divide-y divide-brd">
+            <tbody>
               {recentSearches.map((s, i) => (
-                <tr key={i} className="hover:bg-bg">
-                  <td className="px-4 py-3">
-                    <Link href={`/fiche/${s.ref_code}`} className="font-mono text-xs text-acc hover:underline">
+                <tr key={i} style={{ borderTop: i > 0 ? '1px solid #F0EFEE' : 'none' }}>
+                  <td className="px-6 py-3">
+                    <Link
+                      href={`/fiche/${s.ref_code}`}
+                      className="text-xs font-medium hover:underline"
+                      style={{ color: '#2A5C45', fontFamily: 'var(--font-mono)' }}
+                    >
                       {s.ref_code}
                     </Link>
                   </td>
-                  <td className="px-4 py-3">
-                    <span className={`text-xs font-medium ${s.result_found ? 'text-acc' : 'text-err'}`}>
+                  <td className="px-6 py-3">
+                    <span
+                      className="text-xs font-medium"
+                      style={{ color: s.result_found ? '#2A5C45' : '#9B1C1C' }}
+                    >
                       {s.result_found ? 'Oui' : 'Non'}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-ink3 text-xs">{formatDate(s.created_at)}</td>
+                  <td className="px-6 py-3 text-xs" style={{ color: '#8A837C' }}>
+                    {formatDate(s.created_at)}
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
         ) : (
-          <p className="text-center py-8 text-ink3 text-sm">Aucune recherche effectuée.</p>
+          <p className="text-center py-10 text-sm" style={{ color: '#8A837C' }}>
+            Aucune recherche effectuée.
+          </p>
         )}
       </div>
     </div>

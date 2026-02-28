@@ -13,37 +13,35 @@ export default async function AdminPropertiesPage() {
 
   return (
     <div>
-      <h1 className="font-display text-2xl text-ink mb-6">Propriétés</h1>
-      <div className="bg-surf rounded-r3 shadow-sh1 overflow-hidden">
+      <h1 className="text-2xl mb-8" style={{ fontFamily: 'var(--font-fraunces)', color: '#1A1714' }}>
+        Propriétés
+      </h1>
+      <div className="rounded-2xl overflow-hidden" style={{ backgroundColor: '#FFFFFF', boxShadow: '0 2px 8px rgba(0,0,0,.06)' }}>
         <table className="w-full text-sm">
-          <thead className="bg-bg2 text-ink3 text-xs uppercase">
+          <thead style={{ backgroundColor: '#EFECE5' }}>
             <tr>
               {['Code REF', 'Ville', 'Type', 'Prix', 'Statut', 'Ajouté le'].map(h => (
-                <th key={h} className="px-4 py-3 text-left font-medium">{h}</th>
+                <th key={h} className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider" style={{ color: '#8A837C' }}>{h}</th>
               ))}
             </tr>
           </thead>
-          <tbody className="divide-y divide-brd">
-            {props?.map(p => (
-              <tr key={p.id} className="hover:bg-bg">
-                <td className="px-4 py-3 font-mono text-xs text-ink">{p.ref_code}</td>
-                <td className="px-4 py-3 text-ink3">
-                  {cityName(p.country_code, p.city_code)}
-                </td>
-                <td className="px-4 py-3 text-ink3 capitalize">{p.property_type ?? '—'}</td>
-                <td className="px-4 py-3 text-ink">
+          <tbody>
+            {props?.map((p, i) => (
+              <tr key={p.id} style={{ borderTop: i > 0 ? '1px solid #F0EFEE' : 'none' }}>
+                <td className="px-6 py-3 text-xs" style={{ color: '#1A1714', fontFamily: 'var(--font-mono)' }}>{p.ref_code}</td>
+                <td className="px-6 py-3 text-sm" style={{ color: '#5A5550' }}>{cityName(p.country_code, p.city_code)}</td>
+                <td className="px-6 py-3 text-sm capitalize" style={{ color: '#5A5550' }}>{p.property_type ?? '—'}</td>
+                <td className="px-6 py-3 text-sm" style={{ color: '#1A1714' }}>
                   {p.price ? formatPrice(p.price, p.currency ?? 'FCFA') : '—'}
                 </td>
-                <td className="px-4 py-3">
-                  <StatusPill status={p.status} />
-                </td>
-                <td className="px-4 py-3 text-ink3 text-xs">{formatDate(p.created_at)}</td>
+                <td className="px-6 py-3"><StatusPill status={p.status} size="sm" /></td>
+                <td className="px-6 py-3 text-xs" style={{ color: '#8A837C' }}>{formatDate(p.created_at)}</td>
               </tr>
             ))}
           </tbody>
         </table>
         {(!props || props.length === 0) && (
-          <p className="text-center py-8 text-ink3 text-sm">Aucune propriété.</p>
+          <p className="text-center py-10 text-sm" style={{ color: '#8A837C' }}>Aucune propriété.</p>
         )}
       </div>
     </div>

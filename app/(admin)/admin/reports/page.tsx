@@ -1,8 +1,8 @@
 export default function AdminReportsPage() {
   return (
     <div>
-      <h1 className="font-display text-2xl text-ink mb-6">Signalements</h1>
-      <p className="text-ink3 text-sm">Gestion des signalements — à venir.</p>
+      <h1 className="text-2xl mb-8" style={{ fontFamily: 'var(--font-fraunces)', color: '#1A1714' }}>Signalements</h1>
+      <p className="text-sm" style={{ color: '#8A837C' }}>Gestion des signalements — à venir.</p>
     </div>
   );
 }

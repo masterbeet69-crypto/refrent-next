@@ -2,9 +2,6 @@
 import { useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { Input } from '@/components/ui/Input';
-import { Button } from '@/components/ui/Button';
-import { Toast } from '@/components/ui/Toast';
 
 function LoginForm() {
   const [email, setEmail]     = useState('');
@@ -18,6 +15,7 @@ function LoginForm() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
+    setErr('');
     const res = await fetch('/api/v1/auth/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -34,36 +32,75 @@ function LoginForm() {
   }
 
   return (
-    <div className="bg-surf rounded-r3 shadow-sh2 p-8 w-full max-w-sm">
-      <h1 className="font-display text-2xl text-ink mb-6">Connexion</h1>
-      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-        <Input
-          label="Email"
-          type="email"
-          value={email}
-          onChange={e => setEmail(e.target.value)}
-          required
-          autoComplete="email"
-        />
-        <Input
-          label="Mot de passe"
-          type="password"
-          value={pass}
-          onChange={e => setPass(e.target.value)}
-          required
-          autoComplete="current-password"
-        />
-        <Button type="submit" loading={loading} className="w-full">
-          Se connecter
-        </Button>
-      </form>
-      <p className="text-sm text-ink3 mt-4 text-center">
-        Pas encore de compte ?{' '}
-        <Link href="/register" className="text-acc hover:underline">
+    <div
+      className="w-full max-w-sm rounded-2xl"
+      style={{ backgroundColor: '#FFFFFF', boxShadow: '0 4px 24px rgba(0,0,0,.10)' }}
+    >
+      {/* Tabs */}
+      <div className="flex" style={{ borderBottom: '1px solid #E8E4DF' }}>
+        <div
+          className="flex-1 py-4 text-center text-sm font-medium"
+          style={{ color: '#1A1714', borderBottom: '2px solid #2A5C45' }}
+        >
+          Connexion
+        </div>
+        <Link
+          href="/register"
+          className="flex-1 py-4 text-center text-sm font-medium transition-colors"
+          style={{ color: '#8A837C' }}
+        >
           S&apos;inscrire
         </Link>
-      </p>
-      {err && <Toast message={err} type="error" onClose={() => setErr('')} />}
+      </div>
+
+      {/* Form */}
+      <div className="p-8">
+        <h1
+          className="text-2xl mb-6"
+          style={{ fontFamily: 'var(--font-fraunces)', color: '#1A1714' }}
+        >
+          Bon retour !
+        </h1>
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <Field
+            label="Email"
+            type="email"
+            value={email}
+            onChange={e => setEmail(e.target.value)}
+            required
+            autoComplete="email"
+          />
+          <Field
+            label="Mot de passe"
+            type="password"
+            value={pass}
+            onChange={e => setPass(e.target.value)}
+            required
+            autoComplete="current-password"
+          />
+
+          {err && (
+            <p className="text-sm" style={{ color: '#9B1C1C' }}>{err}</p>
+          )}
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full py-3.5 rounded-xl text-white font-medium transition-opacity"
+            style={{ backgroundColor: '#2A5C45', opacity: loading ? 0.7 : 1 }}
+          >
+            {loading ? 'Connexion…' : 'Se connecter'}
+          </button>
+        </form>
+
+        <p className="text-sm text-center mt-6" style={{ color: '#8A837C' }}>
+          Pas encore de compte ?{' '}
+          <Link href="/register" className="font-medium" style={{ color: '#2A5C45' }}>
+            S&apos;inscrire
+          </Link>
+        </p>
+      </div>
     </div>
   );
 }
@@ -73,5 +110,30 @@ export default function LoginPage() {
     <Suspense>
       <LoginForm />
     </Suspense>
+  );
+}
+
+function Field({
+  label,
+  ...props
+}: { label: string } & React.InputHTMLAttributes<HTMLInputElement>) {
+  const [focused, setFocused] = useState(false);
+  return (
+    <div className="space-y-1.5">
+      <label className="text-sm font-medium" style={{ color: '#1A1714' }}>
+        {label}
+      </label>
+      <input
+        {...props}
+        className="w-full px-4 py-3 rounded-xl outline-none transition-all text-sm"
+        style={{
+          border: `1px solid ${focused ? '#2A5C45' : '#E8E4DF'}`,
+          color: '#1A1714',
+          backgroundColor: '#FFFFFF',
+        }}
+        onFocus={e => { setFocused(true); props.onFocus?.(e); }}
+        onBlur={e => { setFocused(false); props.onBlur?.(e); }}
+      />
+    </div>
   );
 }

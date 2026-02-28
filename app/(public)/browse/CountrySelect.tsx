@@ -23,7 +23,8 @@ export function CountrySelect({ defaultValue = '', currentParams }: Props) {
     <select
       defaultValue={defaultValue}
       onChange={handleChange}
-      className="px-3 py-2 rounded-r2 border border-brd bg-surf text-sm text-ink focus:outline-none focus:border-acc"
+      className="px-3 py-2 rounded-lg outline-none text-sm"
+      style={{ border: '1px solid #E8E4DF', backgroundColor: '#FFFFFF', color: '#1A1714' }}
     >
       <option value="">Tous les pays</option>
       {Object.entries(AFRICA_REGIONS).map(([cc, r]) => (

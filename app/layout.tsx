@@ -1,22 +1,22 @@
 import type { Metadata } from "next";
-import { Fraunces, Instrument_Sans, DM_Mono } from 'next/font/google';
+import { Fraunces, Inter, JetBrains_Mono } from 'next/font/google';
 import "./globals.css";
 
 const fraunces = Fraunces({
   subsets: ['latin'],
-  variable: '--font-display',
+  variable: '--font-fraunces',
   display: 'swap',
 });
 
-const instrumentSans = Instrument_Sans({
+const inter = Inter({
   subsets: ['latin'],
-  variable: '--font-sans',
+  variable: '--font-inter',
   display: 'swap',
 });
 
-const dmMono = DM_Mono({
+const jetbrainsMono = JetBrains_Mono({
   subsets: ['latin'],
-  weight: ['400', '500'],
+  weight: ['400', '500', '600'],
   variable: '--font-mono',
   display: 'swap',
 });
@@ -32,8 +32,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="fr" className={`${fraunces.variable} ${instrumentSans.variable} ${dmMono.variable}`}>
-      <body className="bg-bg font-sans text-ink antialiased">
+    <html lang="fr" className={`${fraunces.variable} ${inter.variable} ${jetbrainsMono.variable}`}>
+      <body style={{ fontFamily: 'var(--font-inter)' }}>
         {children}
       </body>
     </html>

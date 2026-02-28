@@ -1,11 +1,61 @@
 @import "tailwindcss";
 
+/* Refrent Design System — aligned with Figma Make */
 :root {
-  --font-display: 'Fraunces', serif;
-  --font-sans: 'Instrument Sans', sans-serif;
-  --font-mono: 'DM Mono', monospace;
+  --font-fraunces: 'Fraunces', serif;
+  --font-inter: 'Inter', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+
+  --bg-main: #F7F5F2;
+  --bg-section: #EFECE5;
+  --bg-white: #FFFFFF;
+  --border-default: #E8E4DF;
+  --border-hover: #C4BBB0;
+  --text-primary: #1A1714;
+  --text-secondary: #5A5550;
+  --text-muted: #8A837C;
+  --primary: #2A5C45;
+  --primary-hover: #1E4231;
+  --primary-tint: #EAF2EC;
+  --dark-section: #1A1714;
+  --danger: #C0392B;
+}
+
+@theme {
+  --color-bg: #F7F5F2;
+  --color-bg2: #EFECE5;
+  --color-surf: #FFFFFF;
+  --color-brd: #E8E4DF;
+  --color-brds: #C4BBB0;
+  --color-ink: #1A1714;
+  --color-ink2: #5A5550;
+  --color-ink3: #8A837C;
+  --color-acc: #2A5C45;
+  --color-accl: #EAF2EC;
+  --color-accd: #1E4231;
+  --color-dark: #1A1714;
+  --color-err: #C0392B;
+  --font-family-display: 'Fraunces', serif;
+  --font-family-sans: 'Inter', sans-serif;
+  --font-family-mono: 'JetBrains Mono', monospace;
 }
 
 * {
   box-sizing: border-box;
+}
+
+body {
+  background-color: #F7F5F2;
+  color: #1A1714;
+  font-family: var(--font-inter);
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3 {
+  font-family: var(--font-fraunces);
+}
+
+/* Framer Motion support */
+[data-framer-component-type] {
+  will-change: transform, opacity;
 }

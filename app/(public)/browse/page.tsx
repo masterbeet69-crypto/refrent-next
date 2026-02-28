@@ -38,8 +38,13 @@ export default async function BrowsePage({ searchParams }: Props) {
     <>
       <Nav />
       <main className="max-w-6xl mx-auto px-4 py-8">
-        <h1 className="font-display text-3xl text-ink mb-2">Explorer les biens</h1>
-        <p className="text-ink3 text-sm mb-6">
+        <h1
+          className="text-3xl mb-2"
+          style={{ fontFamily: 'var(--font-fraunces)', color: '#1A1714' }}
+        >
+          Explorer les biens
+        </h1>
+        <p className="text-sm mb-6" style={{ color: '#8A837C' }}>
           {props?.length ?? 0} bien{(props?.length ?? 0) !== 1 ? 's' : ''} trouvé{(props?.length ?? 0) !== 1 ? 's' : ''}
         </p>
 
@@ -51,10 +56,12 @@ export default async function BrowsePage({ searchParams }: Props) {
             <Link
               key={s}
               href={`/browse?${new URLSearchParams({ ...activeParams, status: s })}`}
-              className={`px-3 py-2 rounded-r2 border text-xs transition-colors
-                ${status === s
-                  ? 'bg-acc text-surf border-acc'
-                  : 'bg-surf text-ink3 border-brd hover:border-acc'}`}
+              className="px-3 py-2 rounded-lg text-xs transition-colors"
+              style={{
+                backgroundColor: status === s ? '#2A5C45' : '#FFFFFF',
+                color: status === s ? '#FFFFFF' : '#5A5550',
+                border: `1px solid ${status === s ? '#2A5C45' : '#E8E4DF'}`,
+              }}
             >
               {label}
             </Link>
@@ -63,7 +70,8 @@ export default async function BrowsePage({ searchParams }: Props) {
           {(country || city || status || type) && (
             <Link
               href="/browse"
-              className="px-3 py-2 rounded-r2 border border-brd text-xs text-ink3 hover:border-acc transition-colors"
+              className="px-3 py-2 rounded-lg text-xs transition-colors"
+              style={{ border: '1px solid #E8E4DF', color: '#8A837C', backgroundColor: '#FFFFFF' }}
             >
               Réinitialiser
             </Link>
@@ -76,20 +84,26 @@ export default async function BrowsePage({ searchParams }: Props) {
             <Link
               key={p.id}
               href={`/fiche/${p.ref_code}`}
-              className="bg-surf rounded-r3 shadow-sh1 p-5 hover:shadow-sh2 transition-shadow block"
+              className="rounded-2xl p-5 block transition-shadow hover:shadow-md"
+              style={{ backgroundColor: '#FFFFFF', boxShadow: '0 2px 8px rgba(0,0,0,.06)' }}
             >
               <div className="flex justify-between items-start mb-3">
-                <span className="font-mono text-xs text-ink3">{p.ref_code}</span>
-                <StatusPill status={p.status} />
+                <span
+                  className="text-xs"
+                  style={{ color: '#8A837C', fontFamily: 'var(--font-mono)' }}
+                >
+                  {p.ref_code}
+                </span>
+                <StatusPill status={p.status} size="sm" />
               </div>
-              <div className="text-ink font-medium mb-1">
+              <div className="font-medium mb-1" style={{ color: '#1A1714' }}>
                 {p.city_name ?? p.city_code}
               </div>
               {p.district && (
-                <div className="text-ink3 text-sm">{p.district}</div>
+                <div className="text-sm" style={{ color: '#8A837C' }}>{p.district}</div>
               )}
               {p.price && (
-                <div className="text-acc font-semibold mt-2 text-sm">
+                <div className="font-semibold mt-2 text-sm" style={{ color: '#2A5C45' }}>
                   {formatPrice(p.price, p.currency ?? 'FCFA')}
                 </div>
               )}
@@ -99,8 +113,12 @@ export default async function BrowsePage({ searchParams }: Props) {
 
         {(!props || props.length === 0) && (
           <div className="text-center py-16">
-            <p className="text-ink3">Aucun bien trouvé pour ces critères.</p>
-            <Link href="/browse" className="text-acc hover:underline text-sm mt-2 inline-block">
+            <p style={{ color: '#8A837C' }}>Aucun bien trouvé pour ces critères.</p>
+            <Link
+              href="/browse"
+              className="hover:underline text-sm mt-2 inline-block"
+              style={{ color: '#2A5C45' }}
+            >
               Voir tous les biens
             </Link>
           </div>

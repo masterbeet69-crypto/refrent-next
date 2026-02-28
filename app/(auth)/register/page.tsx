@@ -2,15 +2,11 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Input } from '@/components/ui/Input';
-import { Button } from '@/components/ui/Button';
-import { Toast } from '@/components/ui/Toast';
 import { AFRICA_REGIONS } from '@/lib/utils/country';
 
 const ALLOWED_ROLES = [
-  { value: 'user',       label: 'Particulier' },
-  { value: 'agent',      label: 'Agent immobilier' },
-  { value: 'advertiser', label: 'Annonceur' },
+  { value: 'user',  label: 'Particulier' },
+  { value: 'agent', label: 'Agent immobilier' },
 ];
 
 type FormState = {
@@ -48,6 +44,7 @@ export default function RegisterPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
+    setErr('');
     const res = await fetch('/api/v1/auth/register', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -75,64 +72,161 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="bg-surf rounded-r3 shadow-sh2 p-8 w-full max-w-md">
-      <h1 className="font-display text-2xl text-ink mb-6">Créer un compte</h1>
-      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-        <Input label="Nom complet" value={form.full_name} onChange={set('full_name')} required />
-        <Input label="Email" type="email" value={form.email} onChange={set('email')} required autoComplete="email" />
-        <Input label="Mot de passe" type="password" value={form.password} onChange={set('password')} required minLength={8} autoComplete="new-password" />
-
-        <div className="flex flex-col gap-1">
-          <label className="text-sm font-medium text-ink2">Rôle</label>
-          <select
-            value={form.role}
-            onChange={set('role')}
-            className="w-full px-3 py-2 rounded-r2 border border-brd bg-surf text-sm text-ink focus:outline-none focus:border-acc"
-          >
-            {ALLOWED_ROLES.map(r => (
-              <option key={r.value} value={r.value}>{r.label}</option>
-            ))}
-          </select>
-        </div>
-
-        <div className="grid grid-cols-2 gap-3">
-          <div className="flex flex-col gap-1">
-            <label className="text-sm font-medium text-ink2">Pays</label>
-            <select
-              value={form.country_code}
-              onChange={handleCountryChange}
-              className="w-full px-3 py-2 rounded-r2 border border-brd bg-surf text-sm text-ink focus:outline-none focus:border-acc"
-            >
-              {Object.entries(AFRICA_REGIONS).map(([cc, r]) => (
-                <option key={cc} value={cc}>{r.name}</option>
-              ))}
-            </select>
-          </div>
-          <div className="flex flex-col gap-1">
-            <label className="text-sm font-medium text-ink2">Ville</label>
-            <select
-              value={form.city_code}
-              onChange={set('city_code')}
-              className="w-full px-3 py-2 rounded-r2 border border-brd bg-surf text-sm text-ink focus:outline-none focus:border-acc"
-            >
-              {cities.map(([code, name]) => (
-                <option key={code} value={code}>{name}</option>
-              ))}
-            </select>
-          </div>
-        </div>
-
-        <Button type="submit" loading={loading} className="w-full">
-          S&apos;inscrire
-        </Button>
-      </form>
-      <p className="text-sm text-ink3 mt-4 text-center">
-        Déjà un compte ?{' '}
-        <Link href="/login" className="text-acc hover:underline">
-          Se connecter
+    <div
+      className="w-full max-w-md rounded-2xl"
+      style={{ backgroundColor: '#FFFFFF', boxShadow: '0 4px 24px rgba(0,0,0,.10)' }}
+    >
+      {/* Tabs */}
+      <div className="flex" style={{ borderBottom: '1px solid #E8E4DF' }}>
+        <Link
+          href="/login"
+          className="flex-1 py-4 text-center text-sm font-medium transition-colors"
+          style={{ color: '#8A837C' }}
+        >
+          Connexion
         </Link>
-      </p>
-      {err && <Toast message={err} type="error" onClose={() => setErr('')} />}
+        <div
+          className="flex-1 py-4 text-center text-sm font-medium"
+          style={{ color: '#1A1714', borderBottom: '2px solid #2A5C45' }}
+        >
+          S&apos;inscrire
+        </div>
+      </div>
+
+      {/* Form */}
+      <div className="p-8">
+        <h1
+          className="text-2xl mb-6"
+          style={{ fontFamily: 'var(--font-fraunces)', color: '#1A1714' }}
+        >
+          Créer un compte
+        </h1>
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <Field
+            label="Nom complet"
+            value={form.full_name}
+            onChange={set('full_name')}
+            required
+            autoComplete="name"
+          />
+          <Field
+            label="Email"
+            type="email"
+            value={form.email}
+            onChange={set('email')}
+            required
+            autoComplete="email"
+          />
+          <Field
+            label="Mot de passe"
+            type="password"
+            value={form.password}
+            onChange={set('password')}
+            required
+            minLength={8}
+            autoComplete="new-password"
+          />
+
+          {/* Role */}
+          <SelectField label="Rôle">
+            <select
+              value={form.role}
+              onChange={set('role')}
+              className="w-full px-4 py-3 rounded-xl outline-none text-sm transition-all"
+              style={{ border: '1px solid #E8E4DF', color: '#1A1714', backgroundColor: '#FFFFFF' }}
+            >
+              {ALLOWED_ROLES.map(r => (
+                <option key={r.value} value={r.value}>{r.label}</option>
+              ))}
+            </select>
+          </SelectField>
+
+          {/* Country + City */}
+          <div className="grid grid-cols-2 gap-3">
+            <SelectField label="Pays">
+              <select
+                value={form.country_code}
+                onChange={handleCountryChange}
+                className="w-full px-4 py-3 rounded-xl outline-none text-sm transition-all"
+                style={{ border: '1px solid #E8E4DF', color: '#1A1714', backgroundColor: '#FFFFFF' }}
+              >
+                {Object.entries(AFRICA_REGIONS).map(([cc, r]) => (
+                  <option key={cc} value={cc}>{r.name}</option>
+                ))}
+              </select>
+            </SelectField>
+            <SelectField label="Ville">
+              <select
+                value={form.city_code}
+                onChange={set('city_code')}
+                className="w-full px-4 py-3 rounded-xl outline-none text-sm transition-all"
+                style={{ border: '1px solid #E8E4DF', color: '#1A1714', backgroundColor: '#FFFFFF' }}
+              >
+                {cities.map(([code, name]) => (
+                  <option key={code} value={code}>{name}</option>
+                ))}
+              </select>
+            </SelectField>
+          </div>
+
+          {err && (
+            <p className="text-sm" style={{ color: '#9B1C1C' }}>{err}</p>
+          )}
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full py-3.5 rounded-xl text-white font-medium transition-opacity"
+            style={{ backgroundColor: '#2A5C45', opacity: loading ? 0.7 : 1 }}
+          >
+            {loading ? 'Création du compte…' : 'Créer mon compte'}
+          </button>
+        </form>
+
+        <p className="text-sm text-center mt-6" style={{ color: '#8A837C' }}>
+          Déjà un compte ?{' '}
+          <Link href="/login" className="font-medium" style={{ color: '#2A5C45' }}>
+            Se connecter
+          </Link>
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function Field({
+  label,
+  ...props
+}: { label: string } & React.InputHTMLAttributes<HTMLInputElement>) {
+  const [focused, setFocused] = useState(false);
+  return (
+    <div className="space-y-1.5">
+      <label className="text-sm font-medium" style={{ color: '#1A1714' }}>
+        {label}
+      </label>
+      <input
+        {...props}
+        className="w-full px-4 py-3 rounded-xl outline-none transition-all text-sm"
+        style={{
+          border: `1px solid ${focused ? '#2A5C45' : '#E8E4DF'}`,
+          color: '#1A1714',
+          backgroundColor: '#FFFFFF',
+        }}
+        onFocus={e => { setFocused(true); props.onFocus?.(e); }}
+        onBlur={e => { setFocused(false); props.onBlur?.(e); }}
+      />
+    </div>
+  );
+}
+
+function SelectField({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="space-y-1.5">
+      <label className="text-sm font-medium" style={{ color: '#1A1714' }}>
+        {label}
+      </label>
+      {children}
     </div>
   );
 }
