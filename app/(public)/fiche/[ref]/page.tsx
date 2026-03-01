@@ -91,11 +91,25 @@ export default async function FichePage({ params }: Props) {
   const isLoggedIn = !!cookieStore.get('rf_role')?.value;
 
   const sb = createServerSupabase();
-  const { data: property } = await sb
+  let { data: property } = await sb
     .from('properties')
     .select('*, agents(name, avatar_url, phone)')
     .eq('ref_code', ref)
     .single();
+
+  // Legacy fallback: REFERENT-XX-YYY-5530 → also try REF-5530
+  if (!property && ref.startsWith('REFERENT-')) {
+    const numStr = ref.split('-').pop();
+    const legacyRef = numStr ? `REF-${parseInt(numStr, 10)}` : null;
+    if (legacyRef) {
+      const { data: legacy } = await sb
+        .from('properties')
+        .select('*, agents(name, avatar_url, phone)')
+        .eq('ref_code', legacyRef)
+        .single();
+      property = legacy;
+    }
+  }
 
   if (!property) return <PropertyNotFound ref={ref} />;
 

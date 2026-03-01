@@ -6,10 +6,17 @@ import { useAuthModal } from '@/components/auth/AuthModalContext';
 import { Nav } from '@/components/layout/Nav';
 import { Footer } from '@/components/layout/Footer';
 import { StatusPill } from '@/components/ui/Pill';
-import { Search, Upload, CheckCircle2, Shield, LayoutDashboard } from 'lucide-react';
-import { autoFormatRefCode, isValidRefCode } from '@/lib/utils/ref';
+import { Search, Upload, CheckCircle2, Shield, LayoutDashboard, LogIn } from 'lucide-react';
+import { autoFormatRefCode } from '@/lib/utils/ref';
 
-const demoRefs = ['REF-5530', 'REF-7714', 'REF-1092'];
+// Strict new format — no legacy REF- accepted on homepage
+const REFERENT_REGEX = /^REFERENT-[A-Z]{2}-[A-Z]{2,5}-\d+$/;
+
+const demoRefs = [
+  'REFERENT-BJ-CTN-5530',
+  'REFERENT-BJ-CTN-7714',
+  'REFERENT-BJ-CTN-1092',
+];
 
 function readRoleCookie(): string | null {
   if (typeof document === 'undefined') return null;
@@ -23,13 +30,22 @@ function dashboardPath(role: string): string {
   return '/user/dashboard';
 }
 
+interface QuotaInfo {
+  remaining: number | null;
+  used: number;
+  limit: number;
+  unlimited: boolean;
+}
+
 export default function LandingPage() {
   const router = useRouter();
   const [refCode, setRefCode] = useState('');
   const [error, setError] = useState('');
   const [role, setRole] = useState<string | null>(null);
+  const [quota, setQuota] = useState<QuotaInfo | null>(null);
   const { openAuthModal } = useAuthModal();
 
+  // Sync role from cookie
   useEffect(() => {
     const syncRole = () => setRole(readRoleCookie());
     syncRole();
@@ -37,17 +53,90 @@ export default function LandingPage() {
     return () => window.removeEventListener('auth:change', syncRole);
   }, []);
 
+  // Fetch quota on mount (refreshes when user comes back after a search)
+  useEffect(() => {
+    fetch('/api/v1/quota')
+      .then(r => r.json())
+      .then((d: QuotaInfo) => setQuota(d))
+      .catch(() => {});
+  }, []);
+
   const handleSearch = (ref?: string) => {
     const raw = ref ?? refCode;
     const q = raw.trim().toUpperCase();
     if (!q) return;
-    if (!isValidRefCode(q)) {
+    if (!REFERENT_REGEX.test(q)) {
       setError('Format invalide. Exemple : REFERENT-BJ-CTN-00001');
       return;
     }
     setError('');
     router.push(`/fiche/${q}`);
   };
+
+  // Build the quota badge content
+  function QuotaBadge() {
+    if (!quota) return (
+      <div
+        className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium"
+        style={{ backgroundColor: '#EAF2EC', color: '#2A5C45' }}
+      >
+        <Shield className="w-3.5 h-3.5" />
+        5 recherches gratuites / semaine
+      </div>
+    );
+
+    if (quota.unlimited || role) return (
+      <div
+        className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium"
+        style={{ backgroundColor: '#EAF2EC', color: '#2A5C45' }}
+      >
+        <Shield className="w-3.5 h-3.5" />
+        Recherches illimitées
+      </div>
+    );
+
+    const { remaining, limit } = quota;
+
+    if (remaining === 0) return (
+      <button
+        onClick={() => openAuthModal('login')}
+        className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-opacity hover:opacity-80"
+        style={{ backgroundColor: '#FDEDED', color: '#9B1C1C' }}
+      >
+        <LogIn className="w-3.5 h-3.5" />
+        Quota atteint — Connectez-vous
+      </button>
+    );
+
+    if (remaining !== null && remaining < limit) return (
+      <div className="flex items-center gap-2">
+        <div
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium"
+          style={{ backgroundColor: '#FEF3CD', color: '#8A5A00' }}
+        >
+          <Shield className="w-3.5 h-3.5" />
+          Il vous reste {remaining} recherche{remaining > 1 ? 's' : ''}
+        </div>
+        <button
+          onClick={() => openAuthModal('register')}
+          className="text-xs font-medium underline transition-opacity hover:opacity-70"
+          style={{ color: '#2A5C45' }}
+        >
+          Illimité →
+        </button>
+      </div>
+    );
+
+    return (
+      <div
+        className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium"
+        style={{ backgroundColor: '#EAF2EC', color: '#2A5C45' }}
+      >
+        <Shield className="w-3.5 h-3.5" />
+        5 recherches gratuites / semaine
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: '#F7F5F2' }}>
@@ -95,9 +184,10 @@ export default function LandingPage() {
 
           {/* Search card */}
           <div
-            className="rounded-2xl p-8 space-y-6"
+            className="rounded-2xl p-8 space-y-4"
             style={{ backgroundColor: '#FFFFFF', boxShadow: '0 4px 24px rgba(0,0,0,.10)' }}
           >
+            {/* Input row */}
             <div className="flex gap-3">
               <input
                 type="text"
@@ -128,31 +218,17 @@ export default function LandingPage() {
             </div>
 
             {error && (
-              <p className="text-sm text-left" style={{ color: '#9B1C1C', marginTop: '-12px' }}>{error}</p>
+              <p className="text-sm text-left" style={{ color: '#9B1C1C' }}>{error}</p>
             )}
 
-            <div className="flex items-center justify-between text-sm">
-              <span style={{ color: '#8A837C', fontFamily: 'var(--font-mono)', fontSize: '13px' }}>
-                Format : REFERENT-BJ-CTN-00001
-              </span>
-              <div
-                className="flex items-center gap-1.5 px-3 py-1 rounded-full font-medium text-xs"
-                style={{ backgroundColor: '#EAF2EC', color: '#2A5C45' }}
-              >
-                <Shield className="w-3.5 h-3.5" />
-                5 recherches gratuites / semaine
-              </div>
-            </div>
-
-            {/* Demo refs */}
-            <div className="pt-4 space-y-3" style={{ borderTop: '1px solid #E8E4DF' }}>
-              <p className="text-sm text-left" style={{ color: '#8A837C' }}>Codes de démonstration :</p>
+            {/* Demo chips + quota badge on same line */}
+            <div className="flex items-center justify-between gap-3 flex-wrap">
               <div className="flex flex-wrap gap-2">
                 {demoRefs.map(ref => (
                   <button
                     key={ref}
                     onClick={() => handleSearch(ref)}
-                    className="px-4 py-2 rounded-lg text-sm transition-colors"
+                    className="px-3 py-1.5 rounded-lg text-xs transition-colors"
                     style={{ backgroundColor: '#EFECE5', color: '#5A5550', fontFamily: 'var(--font-mono)' }}
                     onMouseOver={e => (e.currentTarget.style.backgroundColor = '#E8E4DF')}
                     onMouseOut={e => (e.currentTarget.style.backgroundColor = '#EFECE5')}
@@ -161,6 +237,7 @@ export default function LandingPage() {
                   </button>
                 ))}
               </div>
+              <QuotaBadge />
             </div>
           </div>
         </div>
@@ -313,7 +390,7 @@ export default function LandingPage() {
                   </button>
                   <button
                     onClick={() => openAuthModal('login')}
-                    className="px-8 py-4 rounded-lg font-medium transition-colors"
+                    className="px-8 py-4 rounded-lg font-medium"
                     style={{ color: '#8A837C', border: '1px solid #3A3734' }}
                   >
                     Se connecter
