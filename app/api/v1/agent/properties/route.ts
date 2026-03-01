@@ -77,13 +77,16 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Corps invalide.' }, { status: 400 });
   }
 
-  const { country_code, city_code, property_type, price, status, district, description } = body as {
-    country_code?: string; city_code?: string; property_type?: string;
+  const { country_code, city_code, type, price, status, district, description } = body as {
+    country_code?: string; city_code?: string; type?: string;
     price?: number; status?: string; district?: string; description?: string;
   };
 
   if (!country_code || !city_code) {
     return NextResponse.json({ error: 'Pays et ville requis.' }, { status: 400 });
+  }
+  if (!price || Number(price) <= 0) {
+    return NextResponse.json({ error: 'Le prix est obligatoire.' }, { status: 400 });
   }
 
   const cc  = country_code.toUpperCase();
@@ -102,21 +105,18 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: `Impossible de générer le code REF : ${msg}` }, { status: 500 });
   }
 
-  // Build title from type + city
-  const typeLabel = property_type
-    ? property_type.charAt(0).toUpperCase() + property_type.slice(1)
-    : 'Bien immobilier';
-  const title = `${typeLabel} à ${cityName}`;
+  // Build title: "Appartement à Cotonou"
+  const title = `${type ?? 'Bien immobilier'} à ${cityName}`;
 
-  // Insert using actual DB columns (no country_code, no rooms, no contact_phone)
+  // Insert — columns confirmed from DB schema introspection
   const { data, error } = await sb.from('properties').insert({
     ref_code:     refCode,
     agent_id:     user.id,
     title,
-    type:         property_type ?? null,
+    type:         type ?? null,
     city:         cityName,
     neighborhood: district ?? null,
-    price:        price ?? null,
+    price:        Number(price),
     status:       status ?? 'available',
     description:  description ?? null,
   }).select().single();
