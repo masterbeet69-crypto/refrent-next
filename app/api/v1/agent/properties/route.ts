@@ -85,26 +85,17 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Impossible de générer le code REF.' }, { status: 500 });
   }
 
-  // Fetch agent's phone to use as contact_phone (required by DB)
-  const { data: agentRow } = await sb
-    .from('agents')
-    .select('phone')
-    .eq('user_id', user.id)
-    .single();
-  const contactPhone = (agentRow?.phone as string | null) ?? '';
-
   const { data, error } = await sb.from('properties').insert({
-    ref_code:      refCode,
-    agent_id:      user.id,
-    country_code:  cc,
-    city:          cityName,
-    type:          property_type ?? null,
-    price:         price ?? null,
-    rooms:         rooms ?? null,
-    status:        status ?? 'available',
-    neighborhood:  district ?? null,
-    description:   description ?? null,
-    contact_phone: contactPhone,
+    ref_code:     refCode,
+    agent_id:     user.id,
+    country_code: cc,
+    city:         cityName,
+    type:         property_type ?? null,
+    price:        price ?? null,
+    rooms:        rooms ?? null,
+    status:       status ?? 'available',
+    neighborhood: district ?? null,
+    description:  description ?? null,
   }).select().single();
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
