@@ -93,12 +93,10 @@ export async function POST(req: NextRequest) {
     .single();
   const contactPhone = (agentRow?.phone as string | null) ?? '';
 
-  // Try with new column names (type, neighborhood, city)
   const { data, error } = await sb.from('properties').insert({
     ref_code:      refCode,
     agent_id:      user.id,
     country_code:  cc,
-    city_code:     ctc,
     city:          cityName,
     type:          property_type ?? null,
     price:         price ?? null,
@@ -109,25 +107,7 @@ export async function POST(req: NextRequest) {
     contact_phone: contactPhone,
   }).select().single();
 
-  if (error) {
-    // Fallback: try legacy column names (property_type, district, city_name)
-    const { data: data2, error: error2 } = await sb.from('properties').insert({
-      ref_code:      refCode,
-      agent_id:      user.id,
-      country_code:  cc,
-      city_code:     ctc,
-      city_name:     cityName,
-      property_type: property_type ?? 'furnished',
-      price:         price ?? null,
-      rooms:         rooms ?? null,
-      status:        status ?? 'available',
-      district:      district ?? null,
-      description:   description ?? null,
-      contact_phone: contactPhone,
-    }).select().single();
-    if (error2) return NextResponse.json({ error: error2.message }, { status: 500 });
-    return NextResponse.json({ property: data2 }, { status: 201 });
-  }
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
   return NextResponse.json({ property: data }, { status: 201 });
 }
