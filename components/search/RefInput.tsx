@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Search } from 'lucide-react';
-import { isValidRefCode } from '@/lib/utils/ref';
+import { isValidRefCode, autoFormatRefCode } from '@/lib/utils/ref';
 
 export function RefInput() {
   const [value, setValue] = useState('');
@@ -14,7 +14,7 @@ export function RefInput() {
     e.preventDefault();
     const code = value.trim().toUpperCase();
     if (!isValidRefCode(code)) {
-      setError('Format invalide. Exemple : REF-BJ-CTN-00001');
+      setError('Format invalide. Exemple : REFERENT-BJ-CTN-00001');
       return;
     }
     setError('');
@@ -26,8 +26,8 @@ export function RefInput() {
       <div className="flex gap-2">
         <input
           value={value}
-          onChange={e => { setValue(e.target.value.toUpperCase()); setError(''); }}
-          placeholder="REF-BJ-CTN-00001"
+          onChange={e => { setValue(autoFormatRefCode(e.target.value)); setError(''); }}
+          placeholder="REFERENT-BJ-CTN-00001"
           className="flex-1 px-4 py-3 rounded-xl outline-none transition-all text-sm"
           style={{
             border: `1px solid ${focused ? '#2A5C45' : '#E8E4DF'}`,
