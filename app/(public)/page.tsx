@@ -1,27 +1,52 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { useAuthModal } from '@/components/auth/AuthModalContext';
 import { Nav } from '@/components/layout/Nav';
 import { Footer } from '@/components/layout/Footer';
 import { StatusPill } from '@/components/ui/Pill';
-import { Search, Upload, CheckCircle2, Shield } from 'lucide-react';
+import { Search, Upload, CheckCircle2, Shield, LayoutDashboard } from 'lucide-react';
+import { autoFormatRefCode, isValidRefCode } from '@/lib/utils/ref';
 
-const demoRefs = [
-  'REF-5530',
-  'REF-7714',
-  'REF-1092',
-];
+const demoRefs = ['REF-5530', 'REF-7714', 'REF-1092'];
+
+function readRoleCookie(): string | null {
+  if (typeof document === 'undefined') return null;
+  const match = document.cookie.split(';').find(c => c.trim().startsWith('rf_role='));
+  return match ? decodeURIComponent(match.split('=')[1]) : null;
+}
+
+function dashboardPath(role: string): string {
+  if (role === 'admin') return '/admin/dashboard';
+  if (role === 'agent') return '/agent/dashboard';
+  return '/user/dashboard';
+}
 
 export default function LandingPage() {
   const router = useRouter();
   const [refCode, setRefCode] = useState('');
+  const [error, setError] = useState('');
+  const [role, setRole] = useState<string | null>(null);
   const { openAuthModal } = useAuthModal();
 
+  useEffect(() => {
+    const syncRole = () => setRole(readRoleCookie());
+    syncRole();
+    window.addEventListener('auth:change', syncRole);
+    return () => window.removeEventListener('auth:change', syncRole);
+  }, []);
+
   const handleSearch = (ref?: string) => {
-    const q = ref || refCode;
-    if (!q.trim()) return;
-    router.push(`/fiche/${q.trim().toUpperCase()}`);
+    const raw = ref ?? refCode;
+    const q = raw.trim().toUpperCase();
+    if (!q) return;
+    if (!isValidRefCode(q)) {
+      setError('Format invalide. Exemple : REFERENT-BJ-CTN-00001');
+      return;
+    }
+    setError('');
+    router.push(`/fiche/${q}`);
   };
 
   return (
@@ -42,12 +67,24 @@ export default function LandingPage() {
             </div>
           </div>
 
-          {/* Title */}
+          {/* Title — jeu de couleurs */}
           <h1
             className="text-5xl md:text-6xl max-w-3xl mx-auto"
-            style={{ fontFamily: 'var(--font-fraunces)', color: '#1A1714', lineHeight: 1.1 }}
+            style={{ fontFamily: 'var(--font-fraunces)', lineHeight: 1.1, color: '#1A1714' }}
           >
-            Vérifiez un logement avant de vous déplacer.
+            Vérifiez un{' '}
+            <span
+              style={{
+                background: 'linear-gradient(135deg, #2A5C45 0%, #7B9E44 50%, #C68642 100%)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                backgroundClip: 'text',
+              }}
+            >
+              logement
+            </span>
+            {' '}avant de{' '}
+            <span style={{ color: '#2A5C45' }}>vous déplacer.</span>
           </h1>
 
           {/* Subtitle */}
@@ -64,19 +101,19 @@ export default function LandingPage() {
             <div className="flex gap-3">
               <input
                 type="text"
-                placeholder="Entrez le code REF"
+                placeholder="REFERENT-BJ-CTN-00001"
                 value={refCode}
-                onChange={e => setRefCode(e.target.value.toUpperCase())}
+                onChange={e => { setRefCode(autoFormatRefCode(e.target.value)); setError(''); }}
                 onKeyDown={e => e.key === 'Enter' && handleSearch()}
                 className="flex-1 px-6 py-4 rounded-lg outline-none transition-all"
                 style={{
-                  border: '1px solid #E8E4DF',
+                  border: `1px solid ${error ? '#9B1C1C' : '#E8E4DF'}`,
                   fontFamily: 'var(--font-mono)',
                   fontSize: '15px',
                   color: '#1A1714',
                 }}
-                onFocus={e => (e.target.style.borderColor = '#2A5C45')}
-                onBlur={e => (e.target.style.borderColor = '#E8E4DF')}
+                onFocus={e => (e.target.style.borderColor = error ? '#9B1C1C' : '#2A5C45')}
+                onBlur={e => (e.target.style.borderColor = error ? '#9B1C1C' : '#E8E4DF')}
               />
               <button
                 onClick={() => handleSearch()}
@@ -90,12 +127,16 @@ export default function LandingPage() {
               </button>
             </div>
 
+            {error && (
+              <p className="text-sm text-left" style={{ color: '#9B1C1C', marginTop: '-12px' }}>{error}</p>
+            )}
+
             <div className="flex items-center justify-between text-sm">
-              <span style={{ color: '#8A837C', fontFamily: 'var(--font-mono)' }}>
-                Exemple : REF-5530
+              <span style={{ color: '#8A837C', fontFamily: 'var(--font-mono)', fontSize: '13px' }}>
+                Format : REFERENT-BJ-CTN-00001
               </span>
               <div
-                className="flex items-center gap-1.5 px-3 py-1 rounded-full font-medium"
+                className="flex items-center gap-1.5 px-3 py-1 rounded-full font-medium text-xs"
                 style={{ backgroundColor: '#EAF2EC', color: '#2A5C45' }}
               >
                 <Shield className="w-3.5 h-3.5" />
@@ -105,24 +146,16 @@ export default function LandingPage() {
 
             {/* Demo refs */}
             <div className="pt-4 space-y-3" style={{ borderTop: '1px solid #E8E4DF' }}>
-              <p className="text-sm" style={{ color: '#8A837C' }}>Essayez avec :</p>
+              <p className="text-sm text-left" style={{ color: '#8A837C' }}>Codes de démonstration :</p>
               <div className="flex flex-wrap gap-2">
                 {demoRefs.map(ref => (
                   <button
                     key={ref}
                     onClick={() => handleSearch(ref)}
                     className="px-4 py-2 rounded-lg text-sm transition-colors"
-                    style={{
-                      backgroundColor: '#EFECE5',
-                      color: '#5A5550',
-                      fontFamily: 'var(--font-mono)',
-                    }}
-                    onMouseOver={e => {
-                      e.currentTarget.style.backgroundColor = '#E8E4DF';
-                    }}
-                    onMouseOut={e => {
-                      e.currentTarget.style.backgroundColor = '#EFECE5';
-                    }}
+                    style={{ backgroundColor: '#EFECE5', color: '#5A5550', fontFamily: 'var(--font-mono)' }}
+                    onMouseOver={e => (e.currentTarget.style.backgroundColor = '#E8E4DF')}
+                    onMouseOut={e => (e.currentTarget.style.backgroundColor = '#EFECE5')}
                   >
                     {ref}
                   </button>
@@ -145,9 +178,9 @@ export default function LandingPage() {
 
           <div className="grid md:grid-cols-3 gap-8">
             {[
-              { icon: Upload,        title: "L'agent publie",  desc: "Un agent immobilier ou propriétaire publie son bien et reçoit un code REF unique." },
-              { icon: Search,        title: 'Vous vérifiez',   desc: 'Entrez le code REF pour vérifier instantanément le statut réel du bien immobilier.' },
-              { icon: CheckCircle2,  title: 'Vous agissez',    desc: 'Contactez directement l\'agent si le bien est disponible. Économisez temps et argent.' },
+              { icon: Upload,       title: "L'agent publie",  desc: "Un agent immobilier ou propriétaire publie son bien et reçoit un code REFERENT unique." },
+              { icon: Search,       title: 'Vous vérifiez',   desc: 'Entrez le code REFERENT pour vérifier instantanément le statut réel du bien immobilier.' },
+              { icon: CheckCircle2, title: 'Vous agissez',    desc: "Contactez directement l'agent si le bien est disponible. Économisez temps et argent." },
             ].map(({ icon: Icon, title, desc }) => (
               <div
                 key={title}
@@ -183,17 +216,14 @@ export default function LandingPage() {
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
             {[
               { status: 'Disponible',   borderColor: '#2A5C45', desc: 'Le bien est disponible à la visite et à la location/vente' },
-              { status: 'Réservé',      borderColor: '#8A5A00', desc: 'Le bien est réservé, mais la transaction n\'est pas finalisée' },
-              { status: 'Occupé',       borderColor: '#9B1C1C', desc: 'Le bien est occupé et n\'est plus disponible actuellement' },
+              { status: 'Réservé',      borderColor: '#8A5A00', desc: "Le bien est réservé, mais la transaction n'est pas finalisée" },
+              { status: 'Occupé',       borderColor: '#9B1C1C', desc: "Le bien est occupé et n'est plus disponible actuellement" },
               { status: 'Indisponible', borderColor: '#6B6560', desc: 'Le bien a été retiré de la circulation par le propriétaire' },
             ].map(({ status, borderColor, desc }) => (
               <div
                 key={status}
                 className="rounded-xl p-6 space-y-3"
-                style={{
-                  backgroundColor: '#FFFFFF',
-                  borderLeft: `4px solid ${borderColor}`,
-                }}
+                style={{ backgroundColor: '#FFFFFF', borderLeft: `4px solid ${borderColor}` }}
               >
                 <StatusPill status={status} showDot={false} />
                 <p className="text-sm" style={{ color: '#5A5550' }}>{desc}</p>
@@ -204,7 +234,7 @@ export default function LandingPage() {
       </section>
 
       {/* ── STATS BAR ── */}
-      <section className="py-20 px-6" style={{ backgroundColor: '#1A1714', color: '#FFFFFF' }}>
+      <section className="py-20 px-6" style={{ backgroundColor: '#1A1714' }}>
         <div className="max-w-6xl mx-auto">
           <div className="grid md:grid-cols-4 gap-12">
             {[
@@ -227,7 +257,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ── AGENT CTA ── */}
+      {/* ── AGENT CTA — auth-aware ── */}
       <section
         className="py-20 px-6"
         style={{ backgroundColor: '#1A1714', borderTop: '1px solid #2A2724' }}
@@ -237,25 +267,60 @@ export default function LandingPage() {
             className="rounded-2xl p-12 text-center space-y-6"
             style={{ backgroundColor: '#2A2724' }}
           >
-            <h2
-              className="text-white"
-              style={{ fontFamily: 'var(--font-fraunces)', fontSize: '1.75rem' }}
-            >
-              Vous êtes agent immobilier ?
-            </h2>
-            <p className="text-lg max-w-2xl mx-auto" style={{ color: '#8A837C' }}>
-              Rejoignez des milliers d&apos;agents qui utilisent Refrent pour gérer leurs biens
-              et gagner en crédibilité auprès de leurs clients.
-            </p>
-            <button
-              onClick={() => openAuthModal('register')}
-              className="px-8 py-4 text-white rounded-lg font-medium transition-colors"
-              style={{ backgroundColor: '#2A5C45' }}
-              onMouseOver={e => (e.currentTarget.style.backgroundColor = '#1E4231')}
-              onMouseOut={e => (e.currentTarget.style.backgroundColor = '#2A5C45')}
-            >
-              Créer un compte agent
-            </button>
+            {role ? (
+              <>
+                <h2
+                  className="text-white"
+                  style={{ fontFamily: 'var(--font-fraunces)', fontSize: '1.75rem' }}
+                >
+                  Bienvenue de retour !
+                </h2>
+                <p className="text-lg max-w-2xl mx-auto" style={{ color: '#8A837C' }}>
+                  Accédez à votre tableau de bord pour gérer vos biens, suivre vos alertes et consulter votre historique.
+                </p>
+                <Link
+                  href={dashboardPath(role)}
+                  className="inline-flex items-center gap-2 px-8 py-4 text-white rounded-lg font-medium transition-colors"
+                  style={{ backgroundColor: '#2A5C45' }}
+                  onMouseOver={e => (e.currentTarget.style.backgroundColor = '#1E4231')}
+                  onMouseOut={e => (e.currentTarget.style.backgroundColor = '#2A5C45')}
+                >
+                  <LayoutDashboard className="w-5 h-5" />
+                  Accéder au tableau de bord
+                </Link>
+              </>
+            ) : (
+              <>
+                <h2
+                  className="text-white"
+                  style={{ fontFamily: 'var(--font-fraunces)', fontSize: '1.75rem' }}
+                >
+                  Vous êtes agent immobilier ?
+                </h2>
+                <p className="text-lg max-w-2xl mx-auto" style={{ color: '#8A837C' }}>
+                  Rejoignez des milliers d&apos;agents qui utilisent Refrent pour gérer leurs biens
+                  et gagner en crédibilité auprès de leurs clients.
+                </p>
+                <div className="flex items-center justify-center gap-3 flex-wrap">
+                  <button
+                    onClick={() => openAuthModal('register')}
+                    className="px-8 py-4 text-white rounded-lg font-medium transition-colors"
+                    style={{ backgroundColor: '#2A5C45' }}
+                    onMouseOver={e => (e.currentTarget.style.backgroundColor = '#1E4231')}
+                    onMouseOut={e => (e.currentTarget.style.backgroundColor = '#2A5C45')}
+                  >
+                    Créer un compte agent
+                  </button>
+                  <button
+                    onClick={() => openAuthModal('login')}
+                    className="px-8 py-4 rounded-lg font-medium transition-colors"
+                    style={{ color: '#8A837C', border: '1px solid #3A3734' }}
+                  >
+                    Se connecter
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         </div>
       </section>
