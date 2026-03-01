@@ -156,7 +156,7 @@ export default async function FichePage({ params }: Props) {
                   className="px-3 py-1 rounded-full text-xs font-medium"
                   style={{ backgroundColor: '#FFFFFF', color: '#2A5C45', fontFamily: 'var(--font-mono)' }}
                 >
-                  {p.ref_code}
+                  {ref}
                 </span>
                 {p.type && (
                   <span

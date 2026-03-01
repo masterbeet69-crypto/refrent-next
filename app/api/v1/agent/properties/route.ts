@@ -19,34 +19,50 @@ export async function GET(req: NextRequest) {
   return NextResponse.json({ properties: data ?? [] });
 }
 
-/** Generate REF code: try Supabase RPC first, fall back to DB query. */
+/**
+ * Generate a REFERENT-CC-CITY-NNNNN code.
+ * Tries the Supabase RPC first; falls back to a DB query if it fails
+ * (e.g. RPC errors when legacy REF-5530 codes break the CAST).
+ */
 async function generateRefCode(
   sb: ReturnType<typeof createServerSupabase>,
-  countryCode: string,
-  cityCode: string,
+  cc: string,
+  ctc: string,
 ): Promise<string> {
-  // 1. Try official RPC
+  const newPrefix = `REFERENT-${cc}-${ctc}-`;
+  const oldPrefix = `REF-${cc}-${ctc}-`;
+
+  // 1. Try RPC — it returns REF-CC-CITY-NNNNN; we convert to REFERENT prefix
   const { data: rpcCode, error: rpcErr } = await sb.rpc('generate_ref_code', {
-    p_country_code: countryCode,
-    p_city_code:    cityCode,
+    p_country_code: cc,
+    p_city_code:    ctc,
   });
-  if (!rpcErr && rpcCode) return rpcCode as string;
+  if (!rpcErr && rpcCode) {
+    const raw = rpcCode as string;
+    // Convert REF-BJ-CTN-00001 → REFERENT-BJ-CTN-00001
+    if (raw.startsWith('REF-')) return 'REFERENT-' + raw.slice(4);
+    return raw;
+  }
 
-  // 2. Fallback: query only codes matching the structured format REF-CC-CITY-%
-  //    (avoids CAST errors on legacy short codes like REF-5530)
-  const prefix = `REF-${countryCode}-${cityCode}-`;
-  const { data: refs } = await sb
-    .from('properties')
-    .select('ref_code')
-    .like('ref_code', `${prefix}%`)
-    .order('ref_code', { ascending: false })
-    .limit(1);
+  // 2. Fallback: find max seq among REFERENT- and REF- structured codes (avoids CAST error on legacy short codes)
+  const [{ data: newRefs }, { data: oldRefs }] = await Promise.all([
+    sb.from('properties').select('ref_code').like('ref_code', `${newPrefix}%`)
+      .order('ref_code', { ascending: false }).limit(1),
+    sb.from('properties').select('ref_code').like('ref_code', `${oldPrefix}%`)
+      .order('ref_code', { ascending: false }).limit(1),
+  ]);
 
-  const lastNum = refs?.[0]?.ref_code
-    ? parseInt((refs[0].ref_code as string).replace(prefix, ''), 10)
-    : 0;
-  const nextNum = isNaN(lastNum) ? 1 : lastNum + 1;
-  return `${prefix}${String(nextNum).padStart(5, '0')}`;
+  const parseNum = (code: string | undefined, prefix: string) => {
+    if (!code) return 0;
+    const n = parseInt(code.replace(prefix, ''), 10);
+    return isNaN(n) ? 0 : n;
+  };
+
+  const maxSeq = Math.max(
+    parseNum(newRefs?.[0]?.ref_code, newPrefix),
+    parseNum(oldRefs?.[0]?.ref_code, oldPrefix),
+  );
+  return `${newPrefix}${String(maxSeq + 1).padStart(5, '0')}`;
 }
 
 export async function POST(req: NextRequest) {
@@ -61,9 +77,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Corps invalide.' }, { status: 400 });
   }
 
-  const { country_code, city_code, property_type, price, rooms, status, district, description } = body as {
+  const { country_code, city_code, property_type, price, status, district, description } = body as {
     country_code?: string; city_code?: string; property_type?: string;
-    price?: number; rooms?: number; status?: string; district?: string; description?: string;
+    price?: number; status?: string; district?: string; description?: string;
   };
 
   if (!country_code || !city_code) {
@@ -73,32 +89,38 @@ export async function POST(req: NextRequest) {
   const cc  = country_code.toUpperCase();
   const ctc = city_code.toUpperCase();
 
-  // Resolve city display name from AFRICA_REGIONS
+  // Resolve city display name
   const regionCities = (AFRICA_REGIONS as Record<string, { cities: Record<string, string> }>)[cc]?.cities ?? {};
   const cityName = regionCities[ctc] ?? ctc;
 
-  // Generate REF code (with fallback if RPC fails)
+  // Generate REFERENT-CC-CITY-NNNNN code
   let refCode: string;
   try {
     refCode = await generateRefCode(sb, cc, ctc);
-  } catch {
-    return NextResponse.json({ error: 'Impossible de générer le code REF.' }, { status: 500 });
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : 'Erreur inconnue';
+    return NextResponse.json({ error: `Impossible de générer le code REF : ${msg}` }, { status: 500 });
   }
 
+  // Build title from type + city
+  const typeLabel = property_type
+    ? property_type.charAt(0).toUpperCase() + property_type.slice(1)
+    : 'Bien immobilier';
+  const title = `${typeLabel} à ${cityName}`;
+
+  // Insert using actual DB columns (no country_code, no rooms, no contact_phone)
   const { data, error } = await sb.from('properties').insert({
     ref_code:     refCode,
     agent_id:     user.id,
-    country_code: cc,
-    city:         cityName,
+    title,
     type:         property_type ?? null,
-    price:        price ?? null,
-    rooms:        rooms ?? null,
-    status:       status ?? 'available',
+    city:         cityName,
     neighborhood: district ?? null,
+    price:        price ?? null,
+    status:       status ?? 'available',
     description:  description ?? null,
   }).select().single();
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-
   return NextResponse.json({ property: data }, { status: 201 });
 }
